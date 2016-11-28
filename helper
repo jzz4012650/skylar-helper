@@ -16,20 +16,16 @@ var argv = yargs
             .argv;
 
 var nameValidator         = new RegExp("^[A-Z][a-zA-Z]+$");
-var modulePath            = path.join(__dirname, "../");
+var modulePath            = path.join(process.pwd(), "./modules");
 var PAGES_FOLDER          = "pages";
 var JS_EXTENSION          = "js";
 var STYLE_EXTENSION       = "less";
 var PAGE_NAME_PLACEHOLDER = /<%PageName%>/g;
-var HELP_INFO = `
-    Usage:
 
-        -h|--help           显示帮助信息。
-        -n|--new pageName   新建一个页面，将自动生成该页面所需的各种文件。
-`
-
-var args = process.argv.slice(2);
-
+/**
+ * 获取所有的页面入口列表
+ * @return {array} 页面入口名称列表
+ */
 function getPageList() {
     var jsFileTester = new RegExp("\\." + JS_EXTENSION + "$");
     return fs.readdirSync(modulePath).filter(function(d) {
@@ -39,6 +35,11 @@ function getPageList() {
     })
 }
 
+/**
+ * 生成一个页面相关的文件
+ * @param {string} 页面名称
+ * @return {number} 0 成功 1 失败
+ */
 function createPage(pageName) {
     var pages, pageEntry, pageFolder;
 
@@ -111,5 +112,11 @@ function createPage(pageName) {
 
 // -n --new
 if (argv["new"]) {
+    try {
+        fs.statSync(modulePath);
+    } catch(e) {
+        console.log("没有找到modules目录，请确保在www目录下执行该脚本");
+        process.exit(1);
+    }
     process.exit(createPage(argv["new"]));
 }
