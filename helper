@@ -1,0 +1,115 @@
+#!/usr/bin/env node
+
+var path = require("path");
+var fs = require("fs");
+var yargs = require("yargs");
+var tplEntry = require("./templates/entry");
+var tplIndex = require("./templates/index");
+var tplAction = require("./templates/action");
+var tplReducer = require("./templates/reducer");
+
+var argv = yargs
+            .command("-n, --new <PageName>", "新建一个页面")
+            .alias("n", "new")
+            .alias("h", "help")
+            .help()
+            .argv;
+
+var nameValidator         = new RegExp("^[A-Z][a-zA-Z]+$");
+var modulePath            = path.join(__dirname, "../");
+var PAGES_FOLDER          = "pages";
+var JS_EXTENSION          = "js";
+var STYLE_EXTENSION       = "less";
+var PAGE_NAME_PLACEHOLDER = /<%PageName%>/g;
+var HELP_INFO = `
+    Usage:
+
+        -h|--help           显示帮助信息。
+        -n|--new pageName   新建一个页面，将自动生成该页面所需的各种文件。
+`
+
+var args = process.argv.slice(2);
+
+function getPageList() {
+    var jsFileTester = new RegExp("\\." + JS_EXTENSION + "$");
+    return fs.readdirSync(modulePath).filter(function(d) {
+        return jsFileTester.test(d);
+    }).map(function(d) {
+        return d.replace(jsFileTester, "");
+    })
+}
+
+function createPage(pageName) {
+    var pages, pageEntry, pageFolder;
+
+    if (!nameValidator.test(pageName)) {
+        console.log("页面名称必须由大写字母开头，纯字母组成！");
+        return 1;
+    }
+
+    // 获取入口列表
+    pages = getPageList();
+
+    if (pages.indexOf(pageName) >= 0) {
+        console.log("页面已存在，请指定一个不一样的名称！");
+        return 1;
+    }
+
+    pageEntry = path.join(modulePath, pageName + "." + JS_EXTENSION);
+    pageFolder = path.join(modulePath, PAGES_FOLDER, pageName);
+
+    // 创建pages/pageName的文件夹
+    try {
+        fs.statSync(pageFolder)
+    } catch(e) {
+        fs.mkdirSync(pageFolder);
+    }
+
+    // 创建pages/pageName/actions文件夹
+    try {
+        fs.statSync(pageFolder + "/actions");
+    } catch(e) {
+        fs.mkdirSync(pageFolder + "/actions");
+    }
+
+    // 创建pages/pageName/components文件夹
+    try {
+        fs.statSync(pageFolder + "/components");
+    } catch(e) {
+        fs.mkdirSync(pageFolder + "/components");
+    }
+
+    // 创建pages/pageName/reducers文件夹
+    try {
+        fs.statSync(pageFolder + "/reducers");
+    } catch(e) {
+        fs.mkdirSync(pageFolder + "/reducers");
+    }
+
+    // 创建pages/pageName/constants文件夹
+    try {
+        fs.statSync(pageFolder + "/constants");
+    } catch(e) {
+        fs.mkdirSync(pageFolder + "/constants");
+    }
+
+    // 写入入口文件
+    fs.writeFileSync(pageEntry, tplEntry.replace(PAGE_NAME_PLACEHOLDER, pageName));
+
+    // 写入index.js
+    fs.writeFileSync(pageFolder + "/index." + JS_EXTENSION, tplIndex.replace(PAGE_NAME_PLACEHOLDER, pageName));
+
+    // 写入入口样式文件
+    fs.writeFileSync(pageFolder + "/index." + STYLE_EXTENSION, "");
+
+    // 写入action文件
+    fs.writeFileSync(pageFolder + "/actions/index." + JS_EXTENSION, tplAction);
+
+    // 写入reducer文件
+    fs.writeFileSync(pageFolder + "/reducers/index." + JS_EXTENSION, tplReducer);
+}
+
+// -n --new
+if (argv["new"]) {
+    process.exit(createPage(argv["new"]));
+}

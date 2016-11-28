@@ -1,0 +1,13 @@
+{
+  "name": "skylar-helper",
+  "version": "1.0.0",
+  "description": "",
+  "bin": {
+    "skylar-helper": "helper"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "yargs": "^6.4.0"
+  }
+}
