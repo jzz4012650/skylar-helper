@@ -1,13 +1,28 @@
 {
   "name": "skylar-helper",
   "version": "1.0.0",
-  "description": "",
+  "description": "helper for skylar developers",
   "bin": {
     "skylar-helper": "helper"
   },
-  "author": "",
+  "author": "jinzhenzu",
   "license": "ISC",
   "dependencies": {
     "yargs": "^6.4.0"
-  }
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jzz4012650/skylar-helper.git"
+  },
+  "keywords": [
+    "helper"
+  ],
+  "bugs": {
+    "url": "https://github.com/jzz4012650/skylar-helper/issues"
+  },
+  "homepage": "https://github.com/jzz4012650/skylar-helper#readme"
 }
