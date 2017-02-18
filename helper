@@ -17,8 +17,8 @@ var argv = yargs
                 desc: '创建一个页面',
                 handler: handleNewPage
             })
-            .option('j', { alias: 'script-extension', default: 'js', describe: '定义JS文件后缀名' })
-            .option('c', { alias: 'style-extension', default: 'less', describe: '定义样式文件后缀名' })
+            .option('j', { alias: 'script-extension', demand: false, default: 'js', describe: '定义JS文件后缀名' })
+            .option('c', { alias: 'style-extension', demand: false, default: 'less', describe: '定义样式文件后缀名' })
             .alias('n', 'new-page')
             .alias('h', 'help')
             .help()
@@ -46,12 +46,12 @@ function createPage(pageName, modulePath, scriptExt, styleExt) {
     var PAGES_FOLDER = 'pages';
     var NAME_VALIDATOR = new RegExp('^[A-Z][a-zA-Z]+$');
     var PAGE_NAME_PLACEHOLDER = /<%PageName%>/g;
-    var styleExt_PALCEHOLDER = /<%styleExt%>/g;
+    var STYLE_EXT_PALCEHOLDER = /<%styleExt%>/g;
 
     var pages, pageEntry, pageFolder;
 
     if (!NAME_VALIDATOR.test(pageName)) {
-        console.log('❌  页面名称必须由大写字母开头，纯字母组成！');
+        console.log('❌  页面名称必须由大写字母开头，大驼峰形式，纯字母组成！');
         return 1;
     }
 
@@ -68,67 +68,80 @@ function createPage(pageName, modulePath, scriptExt, styleExt) {
 
     // 创建pages/pageName的文件夹
     try {
-        fs.statSync(pageFolder)
+        fs.statSync(pageFolder);
+        console.log('⚠️  ' + 'exist: '.gray + './modules/pages/%s', pageName);
     } catch(e) {
         fs.mkdirSync(pageFolder);
+        console.log('✅  ' + 'mkdir: '.gray + './modules/pages/%s', pageName);
     }
 
     // 创建pages/pageName/actions文件夹
     try {
         fs.statSync(pageFolder + '/actions');
+        console.log('⚠️  ' + 'exist: '.gray + './modules/pages/%s/actions', pageName);
     } catch(e) {
         fs.mkdirSync(pageFolder + '/actions');
+        console.log('✅  ' + 'mkdir: '.gray + './modules/pages/%s/actions', pageName);
     }
 
     // 创建pages/pageName/components文件夹
     try {
         fs.statSync(pageFolder + '/components');
+        console.log('⚠️  ' + 'exist: '.gray + './modules/pages/%s/components', pageName);
     } catch(e) {
         fs.mkdirSync(pageFolder + '/components');
+        console.log('✅  ' + 'mkdir: '.gray + './modules/pages/%s/components', pageName);
     }
 
     // 创建pages/pageName/reducers文件夹
     try {
         fs.statSync(pageFolder + '/reducers');
+        console.log('⚠️  ' + 'exist: '.gray + './modules/pages/%s/reducers', pageName);
     } catch(e) {
         fs.mkdirSync(pageFolder + '/reducers');
+        console.log('✅  ' + 'mkdir: '.gray + './modules/pages/%s/reducers', pageName);
     }
 
     // 创建pages/pageName/constants文件夹
     try {
         fs.statSync(pageFolder + '/constants');
+        console.log('⚠️  ' + 'exist: '.gray + './modules/pages/%s/constants', pageName);
     } catch(e) {
         fs.mkdirSync(pageFolder + '/constants');
+        console.log('✅  ' + 'mkdir: '.gray + './modules/pages/%s/constants', pageName);
     }
 
     // 写入入口文件
     fs.writeFileSync(pageEntry, tplEntry.replace(PAGE_NAME_PLACEHOLDER, pageName));
-    console.log('✅  write: ./modules/%s.%s', pageName, scriptExt);
+    console.log('✅  ' + 'write: '.gray + './modules/%s.%s', pageName, scriptExt);
 
     // 写入index.js
     fs.writeFileSync(pageFolder + '/index.' + scriptExt,
-        tplIndex.replace(PAGE_NAME_PLACEHOLDER, pageName).replace(styleExt_PALCEHOLDER, styleExt));
-    console.log('✅  write: ./modules/Pages/%s/index.js', pageName);
+        tplIndex.replace(PAGE_NAME_PLACEHOLDER, pageName).replace(STYLE_EXT_PALCEHOLDER, styleExt));
+    console.log('✅  ' + 'write: '.gray + './modules/Pages/%s/index.%s', pageName, scriptExt);
 
     // 写入入口样式文件
     fs.writeFileSync(pageFolder + '/index.' + styleExt, '');
-    console.log('✅  write: ./modules/Pages/%s/index.%s', pageName, styleExt);
+    console.log('✅  ' + 'write: '.gray + './modules/Pages/%s/index.%s', pageName, styleExt);
 
     // 写入action文件
     fs.writeFileSync(pageFolder + '/actions/index.' + scriptExt, tplAction);
-    console.log('✅  write: ./modules/Pages/actions/index.%s', scriptExt);
+    console.log('✅  ' + 'write: '.gray + './modules/Pages/actions/index.%s', scriptExt);
 
     // 写入reducer文件
-    fs.writeFileSync(pageFolder + '/reducers/index.' + SCRIPT_EXTENSION, tplReducer);
-    console.log('✅  write: ./modules/Pages/reducers/index.%s', SCRIPT_EXTENSION);
+    fs.writeFileSync(pageFolder + '/reducers/index.' + scriptExt, tplReducer);
+    console.log('✅  ' + 'write: '.gray + './modules/Pages/reducers/index.%s', scriptExt);
+
+    console.log('✅  page: %s created!'.green, pageName.bold);
+    return 0;
 }
 
 // -n --new
 function handleNewPage(argv) {
 
     var pageName   = argv['PageName'];
-    var scriptExt  = argv['j'];
-    var styleExt   = argv['c'];
+    var scriptExt  = argv['j'] || 'js';
+    var styleExt   = argv['c'] || 'less';
     var modulePath = path.join(process.cwd(), './modules');
 
     try {
