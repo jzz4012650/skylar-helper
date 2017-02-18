@@ -1,6 +1,6 @@
 {
   "name": "skylar-helper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "helper for skylar developers",
   "bin": {
     "skylar-helper": "helper"

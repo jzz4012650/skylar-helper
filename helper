@@ -1,37 +1,39 @@
 #!/usr/bin/env node
 
-var path = require("path");
-var fs = require("fs");
-var yargs = require("yargs");
-var tplEntry = require("./templates/entry");
-var tplIndex = require("./templates/index");
-var tplAction = require("./templates/action");
-var tplReducer = require("./templates/reducer");
+var path = require('path');
+var fs = require('fs');
+var yargs = require('yargs');
+var colors = require('colors');
+var tplEntry = require('./templates/entry');
+var tplIndex = require('./templates/index');
+var tplAction = require('./templates/action');
+var tplReducer = require('./templates/reducer');
 
 var argv = yargs
-            .command("-n, --new <PageName>", "新建一个页面")
-            .alias("n", "new")
-            .alias("h", "help")
+            .usage('$0 Commands [Options]')
+            .command({
+                command: 'new-page <PageName>',
+                aliases: ['n', 'new'],
+                desc: '创建一个页面',
+                handler: handleNewPage
+            })
+            .option('j', { alias: 'script-extension', default: 'js', describe: '定义JS文件后缀名' })
+            .option('c', { alias: 'style-extension', default: 'less', describe: '定义样式文件后缀名' })
+            .alias('n', 'new-page')
+            .alias('h', 'help')
             .help()
             .argv;
-
-var nameValidator         = new RegExp("^[A-Z][a-zA-Z]+$");
-var modulePath            = path.join(process.pwd(), "./modules");
-var PAGES_FOLDER          = "pages";
-var JS_EXTENSION          = "js";
-var STYLE_EXTENSION       = "less";
-var PAGE_NAME_PLACEHOLDER = /<%PageName%>/g;
 
 /**
  * 获取所有的页面入口列表
  * @return {array} 页面入口名称列表
  */
-function getPageList() {
-    var jsFileTester = new RegExp("\\." + JS_EXTENSION + "$");
+function getPageList(modulePath, scriptExt) {
+    var jsFileTester = new RegExp('\\.' + scriptExt + '$');
     return fs.readdirSync(modulePath).filter(function(d) {
         return jsFileTester.test(d);
     }).map(function(d) {
-        return d.replace(jsFileTester, "");
+        return d.replace(jsFileTester, '');
     })
 }
 
@@ -40,23 +42,28 @@ function getPageList() {
  * @param {string} 页面名称
  * @return {number} 0 成功 1 失败
  */
-function createPage(pageName) {
+function createPage(pageName, modulePath, scriptExt, styleExt) {
+    var PAGES_FOLDER = 'pages';
+    var NAME_VALIDATOR = new RegExp('^[A-Z][a-zA-Z]+$');
+    var PAGE_NAME_PLACEHOLDER = /<%PageName%>/g;
+    var styleExt_PALCEHOLDER = /<%styleExt%>/g;
+
     var pages, pageEntry, pageFolder;
 
-    if (!nameValidator.test(pageName)) {
-        console.log("页面名称必须由大写字母开头，纯字母组成！");
+    if (!NAME_VALIDATOR.test(pageName)) {
+        console.log('❌  页面名称必须由大写字母开头，纯字母组成！');
         return 1;
     }
 
     // 获取入口列表
-    pages = getPageList();
+    pages = getPageList(modulePath, scriptExt);
 
     if (pages.indexOf(pageName) >= 0) {
-        console.log("页面已存在，请指定一个不一样的名称！");
+        console.log('❌  页面已存在，请指定一个不一样的名称！');
         return 1;
     }
 
-    pageEntry = path.join(modulePath, pageName + "." + JS_EXTENSION);
+    pageEntry = path.join(modulePath, pageName + '.' + scriptExt);
     pageFolder = path.join(modulePath, PAGES_FOLDER, pageName);
 
     // 创建pages/pageName的文件夹
@@ -68,55 +75,72 @@ function createPage(pageName) {
 
     // 创建pages/pageName/actions文件夹
     try {
-        fs.statSync(pageFolder + "/actions");
+        fs.statSync(pageFolder + '/actions');
     } catch(e) {
-        fs.mkdirSync(pageFolder + "/actions");
+        fs.mkdirSync(pageFolder + '/actions');
     }
 
     // 创建pages/pageName/components文件夹
     try {
-        fs.statSync(pageFolder + "/components");
+        fs.statSync(pageFolder + '/components');
     } catch(e) {
-        fs.mkdirSync(pageFolder + "/components");
+        fs.mkdirSync(pageFolder + '/components');
     }
 
     // 创建pages/pageName/reducers文件夹
     try {
-        fs.statSync(pageFolder + "/reducers");
+        fs.statSync(pageFolder + '/reducers');
     } catch(e) {
-        fs.mkdirSync(pageFolder + "/reducers");
+        fs.mkdirSync(pageFolder + '/reducers');
     }
 
     // 创建pages/pageName/constants文件夹
     try {
-        fs.statSync(pageFolder + "/constants");
+        fs.statSync(pageFolder + '/constants');
     } catch(e) {
-        fs.mkdirSync(pageFolder + "/constants");
+        fs.mkdirSync(pageFolder + '/constants');
     }
 
     // 写入入口文件
     fs.writeFileSync(pageEntry, tplEntry.replace(PAGE_NAME_PLACEHOLDER, pageName));
+    console.log('✅  write: ./modules/%s.%s', pageName, scriptExt);
 
     // 写入index.js
-    fs.writeFileSync(pageFolder + "/index." + JS_EXTENSION, tplIndex.replace(PAGE_NAME_PLACEHOLDER, pageName));
+    fs.writeFileSync(pageFolder + '/index.' + scriptExt,
+        tplIndex.replace(PAGE_NAME_PLACEHOLDER, pageName).replace(styleExt_PALCEHOLDER, styleExt));
+    console.log('✅  write: ./modules/Pages/%s/index.js', pageName);
 
     // 写入入口样式文件
-    fs.writeFileSync(pageFolder + "/index." + STYLE_EXTENSION, "");
+    fs.writeFileSync(pageFolder + '/index.' + styleExt, '');
+    console.log('✅  write: ./modules/Pages/%s/index.%s', pageName, styleExt);
 
     // 写入action文件
-    fs.writeFileSync(pageFolder + "/actions/index." + JS_EXTENSION, tplAction);
+    fs.writeFileSync(pageFolder + '/actions/index.' + scriptExt, tplAction);
+    console.log('✅  write: ./modules/Pages/actions/index.%s', scriptExt);
 
     // 写入reducer文件
-    fs.writeFileSync(pageFolder + "/reducers/index." + JS_EXTENSION, tplReducer);
+    fs.writeFileSync(pageFolder + '/reducers/index.' + SCRIPT_EXTENSION, tplReducer);
+    console.log('✅  write: ./modules/Pages/reducers/index.%s', SCRIPT_EXTENSION);
 }
 
 // -n --new
-if (argv["new"]) {
+function handleNewPage(argv) {
+
+    var pageName   = argv['PageName'];
+    var scriptExt  = argv['j'];
+    var styleExt   = argv['c'];
+    var modulePath = path.join(process.cwd(), './modules');
+
+    console.log((argv['PageName'] || '').yellow);
+    console.log(scriptExt.yellow);
+    console.log(styleExt.yellow);
+    process.exit(0);
+
     try {
         fs.statSync(modulePath);
-    } catch(e) {
-        console.log("没有找到modules目录，请确保在www目录下执行该脚本");
+    } catch (e) {
+        console.log('❌  没有找到%s目录，请确保在%s目录下执行该脚本', './modules'.green, 'www'.green);
         process.exit(1);
     }
-    process.exit(createPage(argv["new"]));
+    process.exit(createPage(pageName, modulePath, scriptExt, styleExt));
 }

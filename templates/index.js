@@ -1,4 +1,4 @@
-module.exports = `import "./index.less";
+module.exports = `import "./index.<%STYLE_EXTENSION%>";
 
 import React, { Component } from "react";
 import { connect } from "react-redux"
