@@ -131,11 +131,6 @@ function handleNewPage(argv) {
     var styleExt   = argv['c'];
     var modulePath = path.join(process.cwd(), './modules');
 
-    console.log((argv['PageName'] || '').yellow);
-    console.log(scriptExt.yellow);
-    console.log(styleExt.yellow);
-    process.exit(0);
-
     try {
         fs.statSync(modulePath);
     } catch (e) {
