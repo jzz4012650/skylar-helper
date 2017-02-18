@@ -46,7 +46,7 @@ function createPage(pageName, modulePath, scriptExt, styleExt) {
     var PAGES_FOLDER = 'pages';
     var NAME_VALIDATOR = new RegExp('^[A-Z][a-zA-Z]+$');
     var PAGE_NAME_PLACEHOLDER = /<%PageName%>/g;
-    var STYLE_EXT_PALCEHOLDER = /<%styleExt%>/g;
+    var STYLE_EXT_PALCEHOLDER = /<%STYLE_EXTENSION%>/g;
 
     var pages, pageEntry, pageFolder;
 
