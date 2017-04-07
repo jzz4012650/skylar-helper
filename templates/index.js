@@ -1,4 +1,4 @@
-module.exports = `import "./index.<%STYLE_EXTENSION%>";
+module.exports = `import "./index.<%StyleExtension%>";
 
 import React, { Component } from "react";
 import { connect } from "react-redux"
